@@ -50,6 +50,16 @@ public class ClientHandler implements Runnable {
         if (parts.length >= 2) {
             String user = parts[1].trim();
             this.authenticatedUser = user;
+            // if another session exists for this username, terminate it so only one session remains
+            ClientHandler existing = ServerMain.activeClients.get(user);
+            if (existing != null && existing != this) {
+                try {
+                    existing.sendRawPayload("CMD_KICKED:Another session started");
+                    if (existing.socket != null && !existing.socket.isClosed()) existing.socket.close();
+                } catch (Exception ex) {
+                    // ignore
+                }
+            }
             ServerMain.activeClients.put(user, this);
             out.writeUTF("CMD_LOGIN_SUCCESS");
             System.out.println("[SERVER LOG] Session authenticated and bound for: " + user);
