@@ -1,0 +1,51 @@
+# Maven
+target/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Build and dependency files
+dependency-reduced-pom.xml
+buildNumber.properties
+release.properties
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+
+# IDEs and editors
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# NetBeans
+/nbproject/private/
+
+# Eclipse
+/bin/
+
+# JetBrains runtime
+out/
+
+# Local env files
+.env
+.env.local
+
+# Misc
+.cache/
+
