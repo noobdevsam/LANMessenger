@@ -1,10 +1,11 @@
 package client;
 
-import ui.ChatFrame;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+
+import ui.ChatFrame;
 
 public class NetworkManager implements Runnable {
     private final String serverIP;
@@ -48,6 +49,14 @@ public class NetworkManager implements Runnable {
                 String sender = tokens[1];
                 String text = tokens[3];
                 uiBridge.appendStreamMessage(sender, text);
+            }
+        } else if (rawPayload.startsWith("CMD_FILE:")) {
+            String[] tokens = rawPayload.split(":", 5);
+            if (tokens.length == 5) {
+                String sender = tokens[1];
+                String filename = tokens[3];
+                String base64 = tokens[4];
+                uiBridge.receiveFile(sender, filename, base64);
             }
         }
     }

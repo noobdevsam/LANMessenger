@@ -4,6 +4,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import database.DBConnection;
 
 public class ClientHandler implements Runnable {
     private final Socket socket;
@@ -27,6 +32,8 @@ public class ClientHandler implements Runnable {
 
                 if (payload.startsWith("CMD_LOGIN:")) {
                     handleLoginProtocol(payload);
+                } else if (payload.startsWith("CMD_FILE:")) {
+                    handleFileRouting(payload);
                 } else if (payload.startsWith("CMD_MSG:")) {
                     handleMessageRouting(payload);
                 }
@@ -46,7 +53,30 @@ public class ClientHandler implements Runnable {
             ServerMain.activeClients.put(user, this);
             out.writeUTF("CMD_LOGIN_SUCCESS");
             System.out.println("[SERVER LOG] Session authenticated and bound for: " + user);
+            // mark user ONLINE in DB
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "UPDATE users SET status='ONLINE' WHERE username=?";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, user);
+                    ps.executeUpdate();
+                }
+            } catch (SQLException ex) {
+                System.err.println("[DB] Failed to set user ONLINE: " + ex.getMessage());
+            }
             ServerMain.broadcastUserList();
+        }
+    }
+
+    private void handleFileRouting(String payload) {
+        // payload structure: CMD_FILE:sender:receiver:filename:base64
+        String[] parts = payload.split(":", 5);
+        if (parts.length == 5) {
+            String targetReceiver = parts[2];
+            ClientHandler receiverHandler = ServerMain.activeClients.get(targetReceiver);
+            if (receiverHandler != null) {
+                receiverHandler.sendRawPayload(payload);
+            }
+            this.sendRawPayload(payload);
         }
     }
 
@@ -75,6 +105,16 @@ public class ClientHandler implements Runnable {
         if (authenticatedUser != null) {
             ServerMain.activeClients.remove(authenticatedUser);
             System.out.println("[SERVER LOG] Purged live session reference for: " + authenticatedUser);
+            // set offline in DB
+            try (Connection conn = DBConnection.getConnection()) {
+                String sql = "UPDATE users SET status='OFFLINE' WHERE username=?";
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, authenticatedUser);
+                    ps.executeUpdate();
+                }
+            } catch (SQLException ex) {
+                System.err.println("[DB] Failed to set user OFFLINE: " + ex.getMessage());
+            }
             ServerMain.broadcastUserList();
         }
         try {

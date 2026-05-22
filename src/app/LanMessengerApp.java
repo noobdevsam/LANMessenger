@@ -1,11 +1,16 @@
 package app;
 
 import javax.swing.SwingUtilities;
+
 import server.ServerMain;
 import ui.LoginFrame;
+import utils.NotificationUtils;
 
 public class LanMessengerApp {
     public static void main(String[] args) {
+        // initialize system tray / notifications if supported
+        NotificationUtils.init();
+
         Thread serverThread = new Thread(() -> ServerMain.main(new String[0]));
         serverThread.setDaemon(true);
         serverThread.start();

@@ -1,12 +1,27 @@
 package ui;
 
-import database.DBConnection;
-import utils.SecurityUtils;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+
+import database.DBConnection;
+import utils.SecurityUtils;
 
 public class LoginFrame extends JFrame {
     private final JTextField userField = new JTextField(20);
@@ -81,6 +96,11 @@ public class LoginFrame extends JFrame {
                     if (rs.next()) {
                         String hashedDbPass = rs.getString("password");
                         if (SecurityUtils.verifyPassword(password, hashedDbPass)) {
+                            // mark user ONLINE
+                            try (PreparedStatement ups = conn.prepareStatement("UPDATE users SET status='ONLINE' WHERE username=?")) {
+                                ups.setString(1, username);
+                                ups.executeUpdate();
+                            }
                             new ChatFrame(username).setVisible(true);
                             this.dispose();
                         } else {

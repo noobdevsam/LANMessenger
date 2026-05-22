@@ -1,17 +1,38 @@
 package ui;
 
-import database.DBConnection;
-import utils.SecurityUtils;
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.Base64;
+
+import javax.imageio.ImageIO;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+
+import database.DBConnection;
+import utils.SecurityUtils;
 
 public class RegisterFrame extends JFrame {
     private final JTextField userField = new JTextField(20);
     private final JPasswordField passField = new JPasswordField(20);
     private final JButton registerBtn = new JButton("Commit Record");
     private final JButton navLoginBtn = new JButton("Back to Login");
+    private final JButton choosePicBtn = new JButton("Choose Picture");
+    private String encodedProfilePic = null;
 
     public RegisterFrame() {
         setTitle("Core LAN Messenger - Provision Provisioning Engine");
@@ -43,6 +64,9 @@ public class RegisterFrame extends JFrame {
         add(registerBtn, gbc);
 
         gbc.gridx = 1;
+        add(choosePicBtn, gbc);
+
+        gbc.gridx = 1;
         navLoginBtn.setBackground(new Color(100, 100, 100));
         navLoginBtn.setForeground(Color.WHITE);
         add(navLoginBtn, gbc);
@@ -52,6 +76,7 @@ public class RegisterFrame extends JFrame {
             new LoginFrame().setVisible(true);
             this.dispose();
         });
+        choosePicBtn.addActionListener(e -> pickProfilePicture());
     }
 
     private void processRegistration() {
@@ -64,10 +89,11 @@ public class RegisterFrame extends JFrame {
         }
 
         try (Connection conn = DBConnection.getConnection()) {
-            String sql = "INSERT INTO users (username, password, status) VALUES (?, ?, 'OFFLINE')";
+            String sql = "INSERT INTO users (username, password, status, profile_pic) VALUES (?, ?, 'OFFLINE', ?)";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, username);
                 ps.setString(2, SecurityUtils.hashPassword(password));
+                ps.setString(3, encodedProfilePic);
                 ps.executeUpdate();
                 JOptionPane.showMessageDialog(this, "Account provisioned successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
                 new LoginFrame().setVisible(true);
@@ -75,6 +101,24 @@ public class RegisterFrame extends JFrame {
             }
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Username collision or DB failure: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void pickProfilePicture() {
+        JFileChooser chooser = new JFileChooser();
+        int rc = chooser.showOpenDialog(this);
+        if (rc == JFileChooser.APPROVE_OPTION) {
+            File f = chooser.getSelectedFile();
+            try (FileInputStream fis = new FileInputStream(f);
+                 ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                BufferedImage img = ImageIO.read(f);
+                ImageIO.write(img, "png", baos);
+                String b64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+                this.encodedProfilePic = b64;
+                JOptionPane.showMessageDialog(this, "Profile picture selected.", "OK", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Failed reading image: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }

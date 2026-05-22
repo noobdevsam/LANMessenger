@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
     status TEXT DEFAULT 'OFFLINE',
+    profile_pic TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -11,6 +12,9 @@ CREATE TABLE IF NOT EXISTS messages (
     sender TEXT NOT NULL,
     receiver TEXT NOT NULL,
     message TEXT NOT NULL,
+    file_name TEXT,
+    file_blob TEXT,
+    deleted INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sender) REFERENCES users(username) ON DELETE CASCADE,
     FOREIGN KEY (receiver) REFERENCES users(username) ON DELETE CASCADE
