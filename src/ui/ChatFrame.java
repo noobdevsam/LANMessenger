@@ -132,7 +132,11 @@ public class ChatFrame extends JFrame {
     }
 
     private void establishNetworkPipe() {
-        this.networkManager = new NetworkManager("127.0.0.1", 8085, this);
+        String host = System.getProperty("lanm.server.host",
+                System.getenv().getOrDefault("LANM_SERVER_HOST", "127.0.0.1"));
+        int port = Integer.parseInt(System.getProperty("lanm.server.port",
+                System.getenv().getOrDefault("LANM_SERVER_PORT", "8085")));
+        this.networkManager = new NetworkManager(host, port, this);
         new Thread(networkManager).start();
         networkManager.sendRawPayload("CMD_LOGIN:" + currentUsername);
     }
