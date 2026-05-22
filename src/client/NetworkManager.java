@@ -11,14 +11,20 @@ public class NetworkManager implements Runnable {
     private final String serverIP;
     private final int serverPort;
     private final ChatFrame uiBridge;
+    private final String initialLoginUser;
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
 
     public NetworkManager(String host, int port, ChatFrame uiBridge) {
+        this(host, port, uiBridge, null);
+    }
+
+    public NetworkManager(String host, int port, ChatFrame uiBridge, String initialLoginUser) {
         this.serverIP = host;
         this.serverPort = port;
         this.uiBridge = uiBridge;
+        this.initialLoginUser = initialLoginUser;
     }
 
     @Override
@@ -27,6 +33,16 @@ public class NetworkManager implements Runnable {
             this.socket = new Socket(serverIP, serverPort);
             this.in = new DataInputStream(socket.getInputStream());
             this.out = new DataOutputStream(socket.getOutputStream());
+
+            // send login once connected if an initial user was provided
+            if (initialLoginUser != null && !initialLoginUser.isEmpty()) {
+                try {
+                    out.writeUTF("CMD_LOGIN:" + initialLoginUser);
+                    out.flush();
+                } catch (IOException ioe) {
+                    System.err.println("[CLIENT NET ERROR] Failed to send initial login: " + ioe.getMessage());
+                }
+            }
 
             while (true) {
                 String dynamicPayload = in.readUTF();

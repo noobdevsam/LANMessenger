@@ -141,9 +141,8 @@ public class ChatFrame extends JFrame {
                 System.getenv().getOrDefault("LANM_SERVER_HOST", "127.0.0.1"));
         int port = Integer.parseInt(System.getProperty("lanm.server.port",
                 System.getenv().getOrDefault("LANM_SERVER_PORT", "8085")));
-        this.networkManager = new NetworkManager(host, port, this);
+        this.networkManager = new NetworkManager(host, port, this, currentUsername);
         new Thread(networkManager).start();
-        networkManager.sendRawPayload("CMD_LOGIN:" + currentUsername);
     }
 
     private void requestUserList() {
