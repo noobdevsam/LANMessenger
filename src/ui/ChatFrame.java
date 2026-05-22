@@ -50,6 +50,7 @@ public class ChatFrame extends JFrame {
 
     private final DefaultListModel<String> rosterModel = new DefaultListModel<>();
     private final JList<String> rosterList = new JList<>(rosterModel);
+    private final JButton btnRefresh = new JButton("Refresh");
     private final JTextPane chatWindow = new JTextPane();
     private final JTextField txtPayloadInput = new JTextField();
     private final JButton btnEmit = new JButton("Send Message");
@@ -78,6 +79,9 @@ public class ChatFrame extends JFrame {
         rosterList.setForeground(Color.GREEN);
         rosterList.setCellRenderer(new RosterCellRenderer());
         leftPanel.add(new JScrollPane(rosterList), BorderLayout.CENTER);
+        JPanel refreshPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        refreshPanel.add(btnRefresh);
+        leftPanel.add(refreshPanel, BorderLayout.SOUTH);
         leftPanel.setPreferredSize(new Dimension(200, 0));
         add(leftPanel, BorderLayout.WEST);
 
@@ -116,6 +120,7 @@ public class ChatFrame extends JFrame {
         btnFile.addActionListener(e -> sendFileToTarget());
         btnSearch.addActionListener(e -> performSearch());
         btnDeleteChat.addActionListener(e -> deleteCurrentChat());
+        btnRefresh.addActionListener(e -> requestUserList());
         
         rosterList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -139,6 +144,14 @@ public class ChatFrame extends JFrame {
         this.networkManager = new NetworkManager(host, port, this);
         new Thread(networkManager).start();
         networkManager.sendRawPayload("CMD_LOGIN:" + currentUsername);
+    }
+
+    private void requestUserList() {
+        if (networkManager != null) {
+            networkManager.sendRawPayload("CMD_USER_LIST_REQUEST");
+        } else {
+            JOptionPane.showMessageDialog(this, "Not connected to server.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void dispatchOutgoingMessage() {

@@ -36,6 +36,8 @@ public class ClientHandler implements Runnable {
                     handleFileRouting(payload);
                 } else if (payload.startsWith("CMD_MSG:")) {
                     handleMessageRouting(payload);
+                } else if (payload.equals("CMD_USER_LIST_REQUEST")) {
+                    ServerMain.broadcastUserList();
                 }
             }
         } catch (IOException e) {
